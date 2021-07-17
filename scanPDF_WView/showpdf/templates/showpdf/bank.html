@@ -1,0 +1,16 @@
+{% extends "showpdf/layout.html" %}
+
+{% load static %}
+
+{% block body %}
+    {% if bank is not None %}
+        <h3>{{ bank.name }}</h3>
+        <h4>{{ bank.name_of_company }}</h4>
+        <h4>{{ bank.address }}</h4>
+        <h4>{{ bank.account_no }}</h4>
+        <h4>{{ bank.account_type }}</h4>
+        <h4>{{ bank.currency }}</h4>
+    {% else %}
+    <h3>Bank not found for this datapoint.</h3>
+    {% endif %}
+{% endblock body %}

@@ -1,0 +1,27 @@
+{% extends "showpdf/layout.html" %}
+
+{% load static %}
+
+{% block title %} statements {% endblock title %}
+
+{% block head %}
+
+    <style>
+    #main{
+        display: table;
+    }
+    #sidebar, #content {
+        display: table-cell;
+    }
+    table{
+        border-collapse: collapse;
+    }
+    th, td {
+        width:180px;
+        text-align:center;
+        border:1px solid black;
+        padding:5px;
+            }
+    </style>
+
+{% endblock head %}

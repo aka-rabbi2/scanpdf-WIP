@@ -1,0 +1,291 @@
+{% extends "showpdf/layout.html" %}
+
+{% load static %}
+
+{% block title %} statements {% endblock title %}
+
+{% block head %}
+    <script
+    src="https://code.jquery.com/jquery-2.2.4.min.js"
+    integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+    crossorigin="anonymous"></script>
+    <style>
+    #main{
+        display: table;
+    }
+    /* #sidebar {
+        display: fixed;
+        width: 10%;
+        /* background-image: linear-gradient(to bottom, #80ffff, #2FACB3); */
+    /* } */ */
+    /* #content {
+        display: table-cell;  
+    } */
+    table{
+        position: absolute;
+        left: 286px;
+        border-collapse: collapse;
+    }
+    th, td {
+        /* width:180px; */
+        text-align:center;
+        border:1px solid black;
+        padding:5px;
+        user-select: none;
+            }
+    td.editable:hover{
+        box-shadow: 10px 10px 8px #888888;
+        cursor: pointer;
+    }
+    </style>
+
+{% endblock head %}
+
+{% block body %}
+    <label for="range">Show Entries:</label>
+
+    <select name="range" id="range" style="align-self: flex-start; margin-bottom: 30px;">
+        <option value="10">10</option>
+        <option value="25">25</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+    </select>
+    <h2 id="page-count"></h2>
+    <table>
+        <thead class="table-row">
+            <th>Bank</th>
+            <th>Date</th>
+            <th style="width: 450px;">Particulars</th>
+            <th>Instrument</th>
+            <th>Withdraw</th>
+            <th>Deposit</th>
+            <th>Balance</th>
+        </thead>
+        {% for row in rows %}
+            <tbody class="table-row">
+                <tr>
+                    <td onclick="window.location=`{% url 'showpdf:edit_bank' data_id=row.pk %}`;" class='editable'>{{ row.bank.shorthand }}</td>
+                    <td>{{ row.date }}</td>
+                    <td data-val="{{ row.particulars }}" data-pk="{{row.pk}}" class='editable'>{{ row.particulars }}</td>
+                    <td data-val="{{ row.instrument }}" data-pk="{{row.pk}}" class='editable'>{{ row.instrument }}</td>
+                    <td data-val="{{ row.withdraw }}" data-pk="{{row.pk}}" class='editable'>{{ row.withdraw }}</td>
+                    <td data-val="{{ row.deposit }}" data-pk="{{row.pk}}" class='editable'>{{ row.deposit }}</td>
+                    <td data-val="{{ row.balance }}" data-pk="{{row.pk}}" class='editable'>{{ row.balance }}</td>
+                </tr>
+                
+            </tbody>
+            
+        {% endfor %}
+    </table>
+    
+    <nav aria-label="Page navigation example" style="margin-top: 40px; align-self: flex-end;">
+        <ul class="pagination">
+            <li class="page-item"><a class="page-link previous">Previous</a></li>
+        {% for page_number in total %}
+            {% if page_number == "..." %}
+            <li class="page-item"><a class="page-link" >...</a></li>
+            {% else %}
+                <!-- <button cla value="{{page_number}}">{{page_number}}</button> -->
+                <li class="page-item"><a class="page-link page-value" value="{{page_number}}" >{{page_number}}</a></li>
+            {% endif %}
+        {% endfor %}
+            <li class="page-item"><a class="page-link next">Next</a></li>
+        </ul>
+      </nav>
+
+    
+                   
+    <div class="loader-wrapper">
+        <span class="loader"><span class="loader-inner"></span></span>
+    </div>
+    <script>
+        if (localStorage.getItem('range')){
+            document.querySelector('select').value = localStorage.getItem('range');
+        } else{
+            localStorage.setItem('range', 10);
+            document.querySelector('select').value = localStorage.getItem('range');
+        }
+        
+        const prev_range = document.querySelector('select').value;
+        document.querySelector('select').onchange = () => {
+            localStorage.setItem('range', document.querySelector('select').value);
+            const range = localStorage.getItem('range');
+            location.href = window.location.origin.concat(`/showpdf/1/${range}`);
+        }
+        
+
+        $(window).on("load",function(){
+            $(".loader-wrapper").fadeOut("slow");
+        });
+
+        let clicked = true;
+
+        let edit_form = document.createElement('form');
+        edit_form.setAttribute('id', 'edit-form');
+        edit_form.setAttribute('method', 'POST');
+
+        let text_content = document.createElement('input');
+        let submit = document.createElement('input');
+        let close_button = document.createElement('input');
+
+        // let inputElem = document.createElement('input');
+        // inputElem.type = 'hidden';
+        // inputElem.name = 'csrfmiddlewaretoken';
+        // inputElem.value = '{{ csrf_token }}';
+        // edit_form.appendChild(inputElem);
+
+        const csrfToken = getCookie('CSRF-TOKEN');
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;}
+
+        function getHeader(event){
+            var cell = event.target.parentElement.cellIndex;
+            
+            document.querySelectorAll('table th').forEach(head =>{
+                if (head.cellIndex === cell){ 
+                    cell = head;
+                }
+            });
+            return cell.innerText;
+        }
+
+        document.querySelectorAll('.page-value').forEach(page =>{
+               page.onclick = (event) => {
+                   localStorage.setItem('page_num',page.innerText);
+                //    console.log(event.target);
+                   location.href = window.location.origin.concat(`/showpdf/${event.target.innerText}/${range}`);
+                }
+
+            });
+
+        document.querySelector('.next').onclick = () => {
+            let page = localStorage.getItem('page_num');
+            if (page>={{total|last}}){
+
+            }else {
+                localStorage.setItem('page_num', ++page);
+                location.href = window.location.origin.concat(`/showpdf/${page}/${range}`);
+            }
+            
+        }
+
+        document.querySelector('.previous').onclick = () => {
+            let page = localStorage.getItem('page_num');
+            if (page<=1){
+
+            }else{
+                localStorage.setItem('page_num', --page);
+                location.href = window.location.origin.concat(`/showpdf/${page}/${range}`);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            setInterval( () => { 
+                fetch(window.location.origin.concat('/showpdf/headers'))
+                .then(response => console.log(response.status));
+             }, 20000);
+
+            //not needed
+            // for (const[idx, ele] of [...Array({{ total }}).keys()].entries()){    
+            //     if ([1,2,9,10].includes(idx)){
+            //         console.log(ele);
+            //     }
+            // }
+
+             document.querySelectorAll('.editable').forEach(data => {
+                data.ondblclick = (event) => {
+
+                    if (clicked){
+                        // console.log(event.target.dataset);
+
+                        text_content.setAttribute('type', 'text');
+                        text_content.setAttribute('id', 'edit-content');
+                        text_content.value = event.target.dataset.val;
+
+                        submit.setAttribute('type', 'submit');
+                        submit.setAttribute('id', 'edit-submit');
+
+                        close_button.setAttribute('type', 'button');
+                        close_button.setAttribute('class', 'btn-close close');
+                        close_button.setAttribute('aria-label', 'Close');
+                        
+
+                        edit_form.appendChild(text_content);
+                        edit_form.appendChild(submit);
+                        edit_form.appendChild(close_button);
+
+                        // close_button="<button type='button' class='btn-close close' aria-label='Close'></button>";
+                        // edit_form.insertAdjacentHTML( 'beforeend', close_button );
+
+                        event.target.appendChild( edit_form );
+                        // text_content.focus();
+
+                        if ( document.contains(document.getElementById('edit-form')) ){
+                            clicked = false;
+                        }
+                        
+                    }
+                    
+                }
+                try{
+                    edit_form.onsubmit = (event) => {
+
+                        fetch(window.location.origin.concat('/showpdf/edit_data'), {
+                            method:'PUT',
+
+                            credentials: 'same-origin',
+                            headers: {
+                                "Content-Type": "application/json",
+                                "X-CSRFToken": getCookie("csrftoken")
+                            },
+                            body: JSON.stringify({
+                                'pk':String(event.target.parentElement.dataset.pk), 
+                                'datapoint':String(document.querySelector('#edit-content').value),
+                                'column':String( getHeader(event) )
+                            })
+                        })
+                        .then(response => {
+                            if (response.status===204){
+                                document.querySelector('#edit-form').parentElement.innerText = document.querySelector('#edit-content').value;
+                                edit_form.remove();
+                                clicked = true;
+                            }else {
+                                console.log(response.status);
+                            }
+                            
+                        });
+                        return false;
+                    }
+                    close_button.onclick = () => {
+                            edit_form.remove();
+                            clicked = true;
+                        }
+
+                }
+                catch(e){
+                    console.log(e);
+                }
+                
+
+                });
+                
+                let page = localStorage.getItem('page_num');
+                page ? document.querySelector('#page-count').innerHTML = `Page ${page}`:document.querySelector('#page-count').innerHTML = `Page 1`;
+             
+        });
+    </script>
+{% endblock body %}
+
+<!-- <a href="{% url 'showpdf:bank_details' data_id=row.pk %}"> </a> -->

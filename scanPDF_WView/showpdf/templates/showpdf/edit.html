@@ -1,0 +1,80 @@
+{% extends "showpdf/layout.html" %}
+{% load static %}
+{% load convert_to_float %}
+{% block head %}
+
+<style>
+    html,body{
+        overflow-x: hidden;
+    }
+    .row-flex{
+        display: flex;
+        justify-content: space-around;
+        width: 100%;
+        height: auto;
+    }
+
+    #statement{
+        display: flex;
+        width: 50%;
+        flex-direction: column;
+    }
+    #bank-detail{
+        display: flex;
+        width: 30%;
+        flex-direction: column;
+    }
+    form input{
+        width: 100%;
+        margin-bottom: 5px;
+    }
+</style>
+
+{% endblock head %}
+{% block body %}
+
+    {% if data.bank.pk %}
+    <form class="form-group" action="{% url 'showpdf:edit_bank' data_id=data.pk %}" autocomplete="off" method="POST">
+        {% csrf_token %}
+        <div class="row-flex">
+            <!-- <div id="statement">
+                <label for="Date" class="form-label">Date</label>
+                <input type="date" name="Date" value="{{date}}">
+                <label for="Particulars" class="form-label">Particulars</label>
+                <input type="text" name="Particulars" value="{{data.particulars}}">
+                <label for="Instrument" class="form-label">Instrument</label>
+                <input type="text" name="Instrument" value="{{data.instrument}}">
+                <label for="Withdraw" class="form-label">Withdraw</label>
+                <input type="number" name="Withdraw" step="0.0001" value="{{data.withdraw|to_float}}">
+                <label for="Deposit" class="form-label">Deposit</label>
+                <input type="number" name="Deposit" step="0.0001" value="{{data.deposit|to_float}}">
+                <label for="Balance" class="form-label">Balance</label>
+                <input type="number" name="Balance" step="0.0001" value="{{data.balance|to_float}}">
+            </div> -->
+            <div id="bank-detail">
+                <label for="Name" class="form-label">Bank name</label>
+                <input type="text" name="Name" value="{{bank.name}}">
+                <label for="Shorthand" class="form-label">Shorthand</label>
+                <input type="disabled" name="Shorthand" value="{{bank.shorthand}}">
+                <label for="Company" class="form-label">Company name</label>
+                <input type="text" name="Company" value="{{bank.company}}">
+                <label for="Type" class="form-label">Account type</label>
+                <input type="text" name="Type" value="{{bank.acctype}}">
+                <label for="Account" class="form-label">Account number</label>
+                <input type="text" name="Account" value="{{bank.account}}">
+                <label for="Currency" class="form-label">Currency</label>
+                <input type="text" name="Currency" value="{{bank.currency}}">
+                <label for="Address" class="form-label">Address</label>
+                <input type="text" name="Address" value="{{bank.address}}">
+
+                <input type="submit" value="Create" placeholder="Create">
+            </div>
+        </div>
+        
+
+    </form>
+    {% endif %}
+    {% if error %}
+        <div>{{error}}</div>
+    {% endif %}
+{% endblock %}
